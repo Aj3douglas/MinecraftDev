@@ -32,7 +32,7 @@ class AtUsageInspection : LocalInspectionTool() {
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement?) {
+            override fun visitElement(element: PsiElement) {
                 if (element !is AtEntry) {
                     return
                 }
@@ -48,22 +48,22 @@ class AtUsageInspection : LocalInspectionTool() {
                 val psi = when (member) {
                     is AtFunction ->
                         reference.resolveMember(element.project) ?: srgMap.getMcpMethod(reference)?.resolveMember(
-                            element.project
+                                element.project
                         ) ?: return
                     is AtFieldName ->
                         reference.resolveMember(element.project)
-                            ?: srgMap.getMcpField(reference)?.resolveMember(element.project) ?: return
+                                ?: srgMap.getMcpField(reference)?.resolveMember(element.project) ?: return
                     else ->
                         return
                 }
 
                 val query = ReferencesSearch.search(psi, GlobalSearchScope.projectScope(element.project))
                 query.findFirst()
-                    ?: holder.registerProblem(
-                        element,
-                        "Access Transformer entry is never used",
-                        ProblemHighlightType.LIKE_UNUSED_SYMBOL
-                    )
+                        ?: holder.registerProblem(
+                                element,
+                                "Access Transformer entry is never used",
+                                ProblemHighlightType.LIKE_UNUSED_SYMBOL
+                        )
             }
         }
     }

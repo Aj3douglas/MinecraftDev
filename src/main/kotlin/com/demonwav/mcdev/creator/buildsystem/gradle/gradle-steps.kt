@@ -27,7 +27,6 @@ import com.intellij.codeInsight.actions.ReformatCodeProcessor
 import com.intellij.execution.RunManager
 import com.intellij.ide.ui.UISettings
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
-import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManagerImpl
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
@@ -52,14 +51,12 @@ import org.jetbrains.plugins.groovy.lang.psi.api.statements.blocks.GrClosableBlo
 import org.jetbrains.plugins.groovy.lang.psi.api.statements.expressions.GrReferenceExpression
 
 class BasicGradleStep(
-    private val project: Project,
-    private val rootDirectory: Path,
-    private val buildSystem: BuildSystem,
-    private val gradleFiles: GradleFiles<String>
+        private val project: Project,
+        private val rootDirectory: Path,
+        private val buildSystem: BuildSystem,
+        private val gradleFiles: GradleFiles<String>
 ) : CreatorStep {
     override fun runStep(indicator: ProgressIndicator) {
-        ExternalProjectsManagerImpl.disableProjectWatcherAutoUpdate(project)
-
         val (_, gradleProp, settingsGradle) = setupGradleFiles(rootDirectory, gradleFiles)
 
         runWriteTask {
@@ -82,16 +79,16 @@ class BasicGradleStep(
 }
 
 data class GradleFiles<out T>(
-    val buildGradle: T,
-    val gradleProperties: T?,
-    val settingsGradle: T?
+        val buildGradle: T,
+        val gradleProperties: T?,
+        val settingsGradle: T?
 )
 
 fun setupGradleFiles(dir: Path, givenFiles: GradleFiles<String>): GradleFiles<Path> {
     return GradleFiles(
-        dir.resolve("build.gradle"),
-        givenFiles.gradleProperties?.let { dir.resolve("gradle.properties") },
-        givenFiles.settingsGradle?.let { dir.resolve("settings.gradle") }
+            dir.resolve("build.gradle"),
+            givenFiles.gradleProperties?.let { dir.resolve("gradle.properties") },
+            givenFiles.settingsGradle?.let { dir.resolve("settings.gradle") }
     ).apply {
         Files.createFile(buildGradle)
         gradleProperties?.let { Files.createFile(it) }
@@ -108,38 +105,38 @@ fun addBuildGradleDependencies(project: Project, buildSystem: BuildSystem, text:
         val groovyFile = file as GroovyFile
 
         buildSystem.repositories.asSequence()
-            .filter { it.buildSystems.contains(BuildSystemType.GRADLE) }
-            .map { "maven {name = '${it.id}'\nurl = '${it.url}'\n}" }
-            .toList()
-            .let { reps ->
-                if (reps.isNotEmpty()) {
-                    createRepositoriesOrDependencies(project, groovyFile, "repositories", reps)
+                .filter { it.buildSystems.contains(BuildSystemType.GRADLE) }
+                .map { "maven {name = '${it.id}'\nurl = '${it.url}'\n}" }
+                .toList()
+                .let { reps ->
+                    if (reps.isNotEmpty()) {
+                        createRepositoriesOrDependencies(project, groovyFile, "repositories", reps)
+                    }
                 }
-            }
 
         buildSystem.dependencies.asSequence()
-            .filter { it.gradleConfiguration != null }
-            .map { "${it.gradleConfiguration} '${it.groupId}:${it.artifactId}:${it.version}'" }
-            .toList()
-            .let { deps ->
-                if (buildSystem.dependencies.isNotEmpty()) {
-                    createRepositoriesOrDependencies(project, groovyFile, "dependencies", deps)
+                .filter { it.gradleConfiguration != null }
+                .map { "${it.gradleConfiguration} '${it.groupId}:${it.artifactId}:${it.version}'" }
+                .toList()
+                .let { deps ->
+                    if (buildSystem.dependencies.isNotEmpty()) {
+                        createRepositoriesOrDependencies(project, groovyFile, "dependencies", deps)
+                    }
                 }
-            }
 
         return@runWriteAction file
     }
 }
 
 private fun createRepositoriesOrDependencies(
-    project: Project,
-    file: GroovyFile,
-    name: String,
-    expressions: Iterable<String>
+        project: Project,
+        file: GroovyFile,
+        name: String,
+        expressions: Iterable<String>
 ) {
     // Get the block so we can start working with it
     val block = getClosableBlockByName(file, name)
-        ?: throw IllegalStateException("Failed to parse build.gradle files")
+            ?: throw IllegalStateException("Failed to parse build.gradle files")
 
     // Create a super expression with all the expressions tied together
     val expressionText = expressions.joinToString("\n")
@@ -153,20 +150,20 @@ private fun createRepositoriesOrDependencies(
 }
 
 private fun getClosableBlockByName(element: PsiElement, name: String) =
-    element.children.asSequence()
-        .filter {
-            // We want to find the child which has a GrReferenceExpression with the right name
-            it.children.any { child -> child is GrReferenceExpression && child.text == name }
-        }.map {
-            // We want to find the grandchild which is a GrClosable block
-            it.children.mapNotNull { child -> child as? GrClosableBlock }.firstOrNull()
-        }.filterNotNull()
-        .firstOrNull()
+        element.children.asSequence()
+                .filter {
+                    // We want to find the child which has a GrReferenceExpression with the right name
+                    it.children.any { child -> child is GrReferenceExpression && child.text == name }
+                }.map {
+                    // We want to find the grandchild which is a GrClosable block
+                    it.children.mapNotNull { child -> child as? GrClosableBlock }.firstOrNull()
+                }.filterNotNull()
+                .firstOrNull()
 
 class BasicGradleFinalizerStep(
-    private val module: Module,
-    private val rootDirectory: Path,
-    private val buildSystem: BuildSystem
+        private val module: Module,
+        private val rootDirectory: Path,
+        private val buildSystem: BuildSystem
 ) : CreatorStep {
     private val project
         get() = module.project
@@ -189,10 +186,10 @@ class BasicGradleFinalizerStep(
         val runConfigName = buildSystem.artifactId + " build"
 
         val runConfiguration = ExternalSystemRunConfiguration(
-            GradleConstants.SYSTEM_ID,
-            project,
-            gradleType.configurationFactories[0],
-            runConfigName
+                GradleConstants.SYSTEM_ID,
+                project,
+                gradleType.configurationFactories[0],
+                runConfigName
         )
 
         // Set relevant gradle values
@@ -203,13 +200,14 @@ class BasicGradleFinalizerStep(
         runConfiguration.isAllowRunningInParallel = false
 
         val settings = runManager.createConfiguration(
-            runConfiguration,
-            GradleExternalTaskConfigurationType.getInstance().configurationFactories.first()
+                runConfiguration,
+                GradleExternalTaskConfigurationType.getInstance().configurationFactories.first()
         )
 
         settings.isActivateToolWindowBeforeRun = true
+        settings.storeInLocalWorkspace()
 
-        runManager.addConfiguration(settings, false)
+        runManager.addConfiguration(settings)
         if (runManager.selectedConfiguration == null) {
             runManager.selectedConfiguration = settings
         }
@@ -217,9 +215,9 @@ class BasicGradleFinalizerStep(
 }
 
 class GradleWrapperStep(
-    private val project: Project,
-    private val rootDirectory: Path,
-    private val buildSystem: GradleBuildSystem
+        private val project: Project,
+        private val rootDirectory: Path,
+        private val buildSystem: GradleBuildSystem
 ) : CreatorStep {
     override fun runStep(indicator: ProgressIndicator) {
         val wrapperVersion = buildSystem.gradleVersion
@@ -252,13 +250,13 @@ private fun showProgress(project: Project) {
     @Suppress("UnstableApiUsage")
     val pane = WindowManagerEx.getInstanceEx().getFrame(project)?.rootPane as? IdeRootPane ?: return
     pane.findDeclaredField("myStatusBar")
-        ?.findDeclaredField("myInfoAndProgressPanel")
-        ?.invokeDeclaredMethod("openProcessPopup", arrayOf(Boolean::class.asPrimitiveType), arrayOf(true))
+            ?.findDeclaredField("myInfoAndProgressPanel")
+            ?.invokeDeclaredMethod("openProcessPopup", arrayOf(Boolean::class.asPrimitiveType), arrayOf(true))
 }
 
 class GradleGitignoreStep(
-    private val project: Project,
-    private val rootDirectory: Path
+        private val project: Project,
+        private val rootDirectory: Path
 ) : CreatorStep {
     override fun runStep(indicator: ProgressIndicator) {
         val gitignoreFile = rootDirectory.resolve(".gitignore")

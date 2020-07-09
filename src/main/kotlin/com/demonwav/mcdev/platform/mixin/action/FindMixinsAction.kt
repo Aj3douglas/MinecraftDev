@@ -25,7 +25,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys.PROJECT
 import com.intellij.openapi.actionSystem.CommonDataKeys.PSI_FILE
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.progress.runBackgroundableTask
-import com.intellij.openapi.wm.ToolWindowAnchor
+import com.intellij.openapi.wm.RegisterToolWindowTask
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
@@ -54,22 +54,22 @@ class FindMixinsAction : AnAction() {
 
                 val classes = runReadAction {
                     val mixinAnnotation = JavaPsiFacade.getInstance(project).findClass(
-                        MixinConstants.Annotations.MIXIN,
-                        GlobalSearchScope.allScope(project)
+                            MixinConstants.Annotations.MIXIN,
+                            GlobalSearchScope.allScope(project)
                     ) ?: return@runReadAction null
 
                     // Check all classes with the Mixin annotation
                     val classes = AnnotatedElementsSearch.searchPsiClasses(
-                        mixinAnnotation,
-                        GlobalSearchScope.projectScope(project)
+                            mixinAnnotation,
+                            GlobalSearchScope.projectScope(project)
                     )
-                        .filter {
-                            indicator.text = "Checking ${it.name}..."
+                            .filter {
+                                indicator.text = "Checking ${it.name}..."
 
-                            it.mixinTargets.any { c ->
-                                c.qualifiedName == classOfElement
+                                it.mixinTargets.any { c ->
+                                    c.qualifiedName == classOfElement
+                                }
                             }
-                        }
 
                     when (classes.size) {
                         0 -> null
@@ -84,10 +84,12 @@ class FindMixinsAction : AnAction() {
                     if (classes.size == 1) {
                         gotoTargetElement(classes.single(), editor, file)
                     } else {
-                        ToolWindowManager.getInstance(project).unregisterToolWindow(TOOL_WINDOW_ID)
-                        val window = ToolWindowManager.getInstance(project)
-                            .registerToolWindow(TOOL_WINDOW_ID, true, ToolWindowAnchor.BOTTOM)
-                        window.icon = MixinAssets.MIXIN_CLASS_ICON
+                        val twManager = ToolWindowManager.getInstance(project)
+                        val window = twManager.getToolWindow(TOOL_WINDOW_ID) ?: run {
+                            val task =
+                                    RegisterToolWindowTask.closable(TOOL_WINDOW_ID, icon = MixinAssets.MIXIN_CLASS_ICON)
+                            twManager.registerToolWindow(task)
+                        }
 
                         val component = FindMixinsComponent(classes)
                         val content = ContentFactory.SERVICE.getInstance().createContent(component.panel, null, false)

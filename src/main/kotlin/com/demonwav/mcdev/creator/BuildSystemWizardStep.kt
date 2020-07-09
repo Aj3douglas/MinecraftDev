@@ -43,8 +43,11 @@ class BuildSystemWizardStep(private val creator: MinecraftProjectCreator) : Modu
         }
 
         for (type in types) {
+            println(type.name)
             buildSystemBox.addItem(type)
         }
+
+        buildSystemBox.selectedItem = BuildSystemType.GRADLE
 
         buildSystemBox.selectedIndex = 0
         if (buildSystemBox.itemCount == 1) {
@@ -64,14 +67,7 @@ class BuildSystemWizardStep(private val creator: MinecraftProjectCreator) : Modu
             .groupingBy { it }
             .eachCount()
 
-        val maxValue = counts.maxBy { it.value }?.value ?: return
-        counts.asSequence()
-            .filter { it.value == maxValue }
-            .map { it.key }
-            .firstOrNull()
-            ?.let { mostPopularType ->
-                buildSystemBox.selectedItem = mostPopularType
-            }
+        buildSystemBox.selectedItem = BuildSystemType.GRADLE
     }
 
     override fun updateDataModel() {

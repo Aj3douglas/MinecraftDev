@@ -91,14 +91,14 @@ abstract class BuildSystem(
 }
 
 enum class BuildSystemType(private val readableName: String, val creatorType: KClass<*>) {
-    MAVEN("Maven", MavenCreator::class) {
-        override fun create(groupId: String, artifactId: String, version: String): BuildSystem {
-            return MavenBuildSystem(groupId, artifactId, version)
-        }
-    },
     GRADLE("Gradle", GradleCreator::class) {
         override fun create(groupId: String, artifactId: String, version: String): BuildSystem {
             return GradleBuildSystem(groupId, artifactId, version)
+        }
+    },
+    MAVEN("Maven", MavenCreator::class) {
+        override fun create(groupId: String, artifactId: String, version: String): BuildSystem {
+            return MavenBuildSystem(groupId, artifactId, version)
         }
     };
 
