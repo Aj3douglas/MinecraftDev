@@ -1,7 +1,8 @@
 import org.apache.tools.ant.filters.ReplaceTokens
+plugins {
 
+}
 apply plugin: 'java'
-
 group = '${GROUP_ID}'
 version = '${PLUGIN_VERSION}'
 
@@ -19,4 +20,12 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         filter ReplaceTokens, tokens: [version: version]
     }
+}
+compileKotlin {
+    kotlinOptions.freeCompilerArgs += ["-Xopt-in=kotlin.ExperimentalStdlibApi"]
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.freeCompilerArgs += ["-Xopt-in=kotlin.ExperimentalStdlibApi"]
+    kotlinOptions.jvmTarget = "1.8"
 }

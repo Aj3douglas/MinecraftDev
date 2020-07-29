@@ -34,6 +34,7 @@ class BukkitProjectConfig(override var type: PlatformType) :
     var mattsCommandLib = false
     var mattsGuiLib = false
     var vaultApi = false
+
     var loadOrder: LoadOrder = LoadOrder.POSTWORLD
     var minecraftVersion: String? = null
 

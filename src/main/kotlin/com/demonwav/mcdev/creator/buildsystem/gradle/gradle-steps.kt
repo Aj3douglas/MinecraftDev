@@ -104,6 +104,15 @@ fun addBuildGradleDependencies(project: Project, buildSystem: BuildSystem, text:
 
         val groovyFile = file as GroovyFile
 
+        buildSystem.plugins.asSequence()
+                .map { "id '${it.id}' version '${it.version}'" }
+                .toList()
+                .let { plugins->
+                    if(buildSystem.plugins.isNotEmpty()){
+                        createRepositoriesOrDependencies(project, groovyFile, "plugins", plugins)
+                    }
+                }
+
         buildSystem.repositories.asSequence()
                 .filter { it.buildSystems.contains(BuildSystemType.GRADLE) }
                 .map { "maven {name = '${it.id}'\nurl = '${it.url}'\n}" }
@@ -149,16 +158,19 @@ private fun createRepositoriesOrDependencies(
     block.addBefore(fakeFile, last)
 }
 
-private fun getClosableBlockByName(element: PsiElement, name: String) =
-        element.children.asSequence()
-                .filter {
-                    // We want to find the child which has a GrReferenceExpression with the right name
-                    it.children.any { child -> child is GrReferenceExpression && child.text == name }
-                }.map {
-                    // We want to find the grandchild which is a GrClosable block
-                    it.children.mapNotNull { child -> child as? GrClosableBlock }.firstOrNull()
-                }.filterNotNull()
-                .firstOrNull()
+private fun getClosableBlockByName(element: PsiElement, name: String): GrClosableBlock? {
+    return element.children.asSequence()
+            .filter {
+                // We want to find the child which has a GrReferenceExpression with the right name
+                it.children.any { child ->
+                    child is GrReferenceExpression && child.text == name
+                }
+            }.map {
+                // We want to find the grandchild which is a GrClosable block
+                it.children.mapNotNull { child -> child as? GrClosableBlock }.firstOrNull()
+            }.filterNotNull()
+            .firstOrNull()
+}
 
 class BasicGradleFinalizerStep(
         private val module: Module,

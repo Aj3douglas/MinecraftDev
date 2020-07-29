@@ -39,6 +39,7 @@ abstract class BuildSystem(
     abstract fun buildCreator(obj: Any, rootDirectory: Path, module: Module): ProjectCreator
     open fun configure(list: Collection<Any>, rootDirectory: Path) {}
 
+    var plugins : MutableList<BuildPlugin> = mutableListOf()
     var repositories: MutableList<BuildRepository> = mutableListOf()
     var dependencies: MutableList<BuildDependency> = mutableListOf()
 
@@ -46,7 +47,7 @@ abstract class BuildSystem(
     val dirsOrError: DirectorySet
         get() = directories ?: throw IllegalStateException("Project structure is not yet created")
 
-    val commonModuleName: String
+     val commonModuleName: String
         get() = parentOrError.artifactId + "-common"
 
     /**
@@ -118,6 +119,11 @@ data class BuildDependency(
     val version: String = "",
     val mavenScope: String? = null,
     val gradleConfiguration: String? = null
+)
+
+data class BuildPlugin(
+        val id:String,
+        val version:String
 )
 
 data class BuildRepository(

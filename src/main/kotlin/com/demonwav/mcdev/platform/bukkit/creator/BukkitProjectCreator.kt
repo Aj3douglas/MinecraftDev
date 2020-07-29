@@ -12,6 +12,7 @@ package com.demonwav.mcdev.platform.bukkit.creator
 
 import com.demonwav.mcdev.creator.*
 import com.demonwav.mcdev.creator.buildsystem.BuildDependency
+import com.demonwav.mcdev.creator.buildsystem.BuildPlugin
 import com.demonwav.mcdev.creator.buildsystem.BuildRepository
 import com.demonwav.mcdev.creator.buildsystem.BuildSystem
 import com.demonwav.mcdev.creator.buildsystem.gradle.BasicGradleFinalizerStep
@@ -27,6 +28,7 @@ import com.demonwav.mcdev.creator.buildsystem.maven.MavenBuildSystem
 import com.demonwav.mcdev.creator.buildsystem.maven.MavenGitignoreStep
 import com.demonwav.mcdev.platform.PlatformType
 import com.demonwav.mcdev.platform.bukkit.util.CustomDependency
+import com.demonwav.mcdev.platform.bukkit.util.CustomPlugin
 import com.demonwav.mcdev.platform.bukkit.util.CustomRepository
 import com.demonwav.mcdev.platform.bukkit.util.Language
 import com.intellij.openapi.module.Module
@@ -131,6 +133,7 @@ class BukkitGradleCreator(
             GradleGitignoreStep(project, rootDirectory),
             BasicGradleFinalizerStep(rootModule, rootDirectory, buildSystem)
         )
+        if(config.language == Language.KOTLIN) steps.add(0, CustomPluginStep(buildSystem, CustomPlugin.KOTLIN))
         if(config.mattsCommandLib) steps.add(0, CustomDependencyStep(buildSystem, CustomDependency.MATTS_COMMAND_LIB))
         if(config.mattsGuiLib) steps.add(0, CustomDependencyStep(buildSystem, CustomDependency.MATT_GUI_LIB))
         if(config.vaultApi){
@@ -151,6 +154,20 @@ class BukkitGradleCreator(
             setupMainClassStep(),
             setupYmlStep()
         )
+    }
+}
+
+
+open class CustomPluginStep(
+        protected val buildSystem: BuildSystem,
+        protected val plugin: CustomPlugin
+):CreatorStep{
+    override fun runStep(indicator: ProgressIndicator) {
+        println("Adding ${plugin.name}")
+        buildSystem.plugins.add(BuildPlugin(
+                plugin.id,
+                plugin.version
+        ))
     }
 }
 
